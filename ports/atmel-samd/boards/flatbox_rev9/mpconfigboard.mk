@@ -1,0 +1,23 @@
+# IDs are for a Horipad so that we get a chance for correct button mapping
+USB_VID = 0x0F0D
+USB_PID = 0x00C1
+USB_PRODUCT = "Flatbox rev9"
+USB_MANUFACTURER = "Hosaka"
+
+CHIP_VARIANT = SAMD21E18A
+CHIP_FAMILY = samd21
+
+INTERNAL_FLASH_FILESYSTEM = 1
+LONGINT_IMPL = NONE
+CIRCUITPY_FULL_BUILD = 0
+
+CIRCUITPY_ANALOGIO = 0
+CIRCUITPY_AUDIOCORE = 0
+CIRCUITPY_BUSIO = 0
+CIRCUITPY_PULSEIO = 0
+CIRCUITPY_PWMIO = 0
+CIRCUITPY_ROTARYIO = 0
+CIRCUITPY_RTC = 0
+
+# Include these Python libraries in firmware.
+FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_HID
