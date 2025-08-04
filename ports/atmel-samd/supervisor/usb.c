@@ -16,7 +16,7 @@ void init_usb_hardware(void) {
     #ifdef SAMD21
     _pm_enable_bus_clock(PM_BUS_APBB, USB);
     _pm_enable_bus_clock(PM_BUS_AHB, USB);
-    _gclk_enable_channel(USB_GCLK_ID, GCLK_CLKCTRL_GEN_GCLK0_Val);
+    _gclk_enable_channel(USB_GCLK_ID, GCLK_CLKCTRL_GEN_GCLK1_Val);
     #endif
 
     #ifdef SAM_D5X_E5X
