@@ -317,7 +317,7 @@ safe_mode_t port_init(void) {
     #endif
 
     #ifdef SAMD21
-    hri_nvmctrl_set_CTRLB_RWS_bf(NVMCTRL, 2);
+    // hri_nvmctrl_set_CTRLB_RWS_bf(NVMCTRL, 2);
     _pm_init();
     #endif
 
