@@ -31,6 +31,39 @@ static void neopixel_send_buffer_core(volatile uint32_t *clraddr, uint32_t pinMa
 
 static void neopixel_send_buffer_core(volatile uint32_t *clraddr, uint32_t pinMask,
     const uint8_t *ptr, int numBytes) {
+#ifdef SAMD21
+    // This code is for the CPU running at 8 MHz, no wait states (1 cycle=125ns).
+    // There's extra 6 cycles (750ns) before each byte, but it doesn't seem to be a problem in practice.
+    asm volatile(
+        "        push    {r4, r5, r6, lr};"
+        "        add     r6, r2, r3;"         // r6 = end address (ptr + numBytes)
+
+        "next_byte:"
+        "        ldrb    r5, [r2];"           // load byte from ptr
+        "        lsl     r5, r5, #24;"        // shift left 24 bits
+        "        add     r2, #1;"             // increment ptr
+        "        movs    r4, #8;"             // r4 = 8 bits to process
+
+        "next_bit:"
+        "        str     r1, [r0, #4];"       // set pin HIGH
+        "        lsl     r5, r5, #1;"         // shift left 1 bit
+        "        bcs     one_bit_path;"       // [1 cycle if not taken, 2 if taken]
+
+        "zero_bit_path:"
+        "        str     r1, [r0];"           // set pin LOW
+
+        "one_bit_path:"
+        "        nop;"
+        "        nop;"
+        "        str     r1, [r0];"           // set pin LOW
+        "        sub     r4, #1;"             // decrement bit counter
+        "        bne     next_bit;"           // [1 cycle if not taken, 2 if taken]
+        "        cmp     r2, r6;"             // compare current ptr to end address
+        "        bcc     next_byte;"          // loop if not all bytes sent
+
+        "        pop     {r4, r5, r6, pc};"   // restore registers and return
+    );
+#else
     asm volatile ("        push    {r4, r5, r6, lr};"
         "        add     r3, r2, r3;"
         "loopLoad:"
@@ -89,6 +122,7 @@ static void neopixel_send_buffer_core(volatile uint32_t *clraddr, uint32_t pinMa
         "neopixel_stop:"
         "        pop {r4, r5, r6, pc};"
         "");
+#endif
 }
 
 static uint64_t next_start_raw_ticks = 0;
@@ -109,7 +143,12 @@ void common_hal_neopixel_write(const digitalio_digitalinout_obj_t *digitalinout,
     mp_hal_disable_all_interrupts();
 
     uint32_t pin = digitalinout->pin->number;
+#ifdef SAMD21
+    // We use PORT_IOBUS, not PORT, so that "str r1, [r0]" takes 1 cycle, not 4.
+    port = &PORT_IOBUS->Group[GPIO_PORT(pin)];      // Convert GPIO # to port register
+#else
     port = &PORT->Group[GPIO_PORT(pin)];      // Convert GPIO # to port register
+#endif
     pinMask = (1UL << (pin % 32));   // From port_pin_set_output_level ASF code.
     volatile uint32_t *clr = &(port->OUTCLR.reg);
     neopixel_send_buffer_core(clr, pinMask, pixels, numBytes);
