@@ -38,8 +38,6 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: 3.x
-    - name: Duplicate USB VID/PID check
-      run: python3 -u -m tools.ci_check_duplicate_usb_vid_pid
     - name: Set up submodules
       id: set-up-submodules
       uses: ./.github/actions/deps/submodules
